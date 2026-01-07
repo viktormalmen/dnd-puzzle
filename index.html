@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Slide Puzzle 3×3</title>
+  <style>
+    :root{
+      --gap: 10px;
+      --radius: 16px;
+      --shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+    body{
+      margin:0;
+      min-height:100svh;
+      display:grid;
+      place-items:center;
+      background: radial-gradient(1200px 800px at 50% 30%, #232837, #0d0f14 70%);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:#eef2ff;
+      padding: 20px;
+    }
+    .wrap{
+      width:min(92vw, 520px);
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      align-items:stretch;
+    }
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap:12px;
+    }
+    h1{
+      font-size:18px;
+      margin:0;
+      letter-spacing:.2px;
+      opacity:.92;
+    }
+    .meta{
+      font-size:13px;
+      opacity:.8;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    button{
+      appearance:none;
+      border:0;
+      background:#2a2f40;
+      color:#eef2ff;
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow: 0 6px 18px rgba(0,0,0,.25);
+    }
+    button:active{ transform: translateY(1px); }
+    button.secondary{
+      background: transparent;
+      outline: 1px solid rgba(255,255,255,.18);
+      box-shadow:none;
+      font-weight:600;
+    }
+
+    .board{
+      aspect-ratio: 1 / 1;
+      width:100%;
+      background: rgba(255,255,255,.06);
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      padding: var(--gap);
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: var(--gap);
+      position:relative;
+      overflow:hidden;
+      user-select:none;
+      touch-action: manipulation;
+    }
+
+    .tile{
+      border-radius: var(--radius);
+      background-color: rgba(0,0,0,.25);
+      background-image: var(--img);
+      background-repeat:no-repeat;
+      background-size: 300% 300%;
+      box-shadow: 0 10px 22px rgba(0,0,0,.22);
+      position:relative;
+      cursor:pointer;
+      transition: transform 120ms ease, filter 200ms ease, box-shadow 200ms ease;
+      outline: 1px solid rgba(255,255,255,.10);
+    }
+    .tile:hover{ filter: brightness(1.05); }
+    .tile:active{ transform: scale(.99); }
+
+    .tile.blank{
+      background: rgba(0,0,0,.12);
+      background-image:none;
+      outline: 1px dashed rgba(255,255,255,.18);
+      cursor:default;
+      box-shadow:none;
+    }
+
+    .hint{
+      font-size:13px;
+      opacity:.78;
+      text-align:center;
+      line-height:1.35;
+    }
+
+    /* Pulserande “klart”-effekt */
+    .board.solved{
+      animation: pulse 1.6s ease-in-out infinite;
+      outline: 2px solid rgba(180, 255, 220, .35);
+    }
+    @keyframes pulse{
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(120,255,200,0)); }
+      50%      { transform: scale(1.01); filter: drop-shadow(0 0 14px rgba(120,255,200,.25)); }
+    }
+
+    .toast{
+      text-align:center;
+      font-weight:700;
+      letter-spacing:.2px;
+      opacity:.92;
+      display:none;
+      padding:10px 12px;
+      border-radius: 14px;
+      background: rgba(120,255,200,.12);
+      outline: 1px solid rgba(120,255,200,.22);
+    }
+    .toast.show{ display:block; }
+    .footer{
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .small{
+      font-size:12px;
+      opacity:.65;
+    }
+    input[type="text"]{
+      width:100%;
+      border-radius:12px;
+      border:0;
+      outline: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25);
+      color:#eef2ff;
+      padding:10px 12px;
+      font-size:13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>3×3 Slide-pussel</h1>
+      <div class="meta">
+        <span>Drag: <b id="moves">0</b></span>
+        <button id="shuffleBtn">Blanda</button>
+        <button class="secondary" id="resetBtn">Återställ</button>
+      </div>
+    </div>
+
+    <div class="board" id="board" aria-label="Slide puzzle"></div>
+
+    <div class="toast" id="toast">✅ Klar! (bilden pulserar)</div>
+
+    <div class="footer">
+      <div class="hint">
+        Tryck på en bricka bredvid tomrutan för att flytta den.
+      </div>
+      <div class="small">Tips: om bilden inte laddar, byt till en egen bild-URL.</div>
+    </div>
+
+    <div>
+      <input id="imgUrl" type="text" spellcheck="false"
+        value="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcon_mDpHDnYwCTnJkKvfwv_4bMocY1wH08w&s"
+        aria-label="Bild-URL" />
+    </div>
+  </div>
+
+<script>
+(() => {
+  const size = 3;
+  const solved = Array.from({length: size*size}, (_,i)=>i); // 0..8, 0 = blank
+  let state = solved.slice();
+  let moves = 0;
+  let locked = false;
+
+  const board = document.getElementById('board');
+  const movesEl = document.getElementById('moves');
+  const toast = document.getElementById('toast');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const imgUrlInput = document.getElementById('imgUrl');
+
+  function setImage(url){
+    // CSS-var på board, så tiles kan ärva
+    board.style.setProperty('--img', `url("${url}")`);
+  }
+
+  function idxToRC(idx){
+    return { r: Math.floor(idx / size), c: idx % size };
+  }
+  function rcToIdx(r,c){ return r*size + c; }
+
+  function neighbors(idx){
+    const {r,c} = idxToRC(idx);
+    const n = [];
+    if (r>0) n.push(rcToIdx(r-1,c));
+    if (r<size-1) n.push(rcToIdx(r+1,c));
+    if (c>0) n.push(rcToIdx(r,c-1));
+    if (c<size-1) n.push(rcToIdx(r,c+1));
+    return n;
+  }
+
+  function render(){
+    board.innerHTML = '';
+    board.classList.toggle('solved', isSolved());
+    toast.classList.toggle('show', isSolved());
+
+    for (let pos = 0; pos < state.length; pos++){
+      const tileNum = state[pos]; // 0 blank
+      const el = document.createElement('div');
+      el.className = 'tile' + (tileNum === 0 ? ' blank' : '');
+      el.setAttribute('role','button');
+      el.setAttribute('aria-label', tileNum === 0 ? 'Tom ruta' : `Bricka ${tileNum}`);
+
+      if (tileNum !== 0){
+        // tileNum 1..8 motsvarar position i målbilden: tileNum
+        // i vår solved-array ligger tileNum på samma index som tileNum i solved,
+        // så bakgrundspositionen styrs av tileNum:s "rätt" plats (tileNum->r,c).
+        const {r, c} = idxToRC(tileNum);
+        el.style.backgroundPosition = `${(c/(size-1))*100}% ${(r/(size-1))*100}%`;
+        el.addEventListener('click', () => tryMove(pos));
+        el.addEventListener('touchend', (e) => { e.preventDefault(); tryMove(pos); }, {passive:false});
+      }
+
+      board.appendChild(el);
+    }
+  }
+
+  function isSolved(){
+    for (let i=0;i<state.length;i++){
+      if (state[i] !== solved[i]) return false;
+    }
+    return true;
+  }
+
+  function tryMove(fromPos){
+    if (locked) return;
+    const blankPos = state.indexOf(0);
+    if (!neighbors(fromPos).includes(blankPos)) return;
+
+    // byt plats
+    [state[fromPos], state[blankPos]] = [state[blankPos], state[fromPos]];
+    moves++;
+    movesEl.textContent = moves.toString();
+
+    // Om löst: lås kort för att undvika “extra klick” medan pulsen syns
+    if (isSolved()){
+      locked = true;
+      setTimeout(()=>locked=false, 300);
+    }
+    render();
+  }
+
+  // “Säker” shuffle: gör slumpmässiga giltiga moves från löst läge => alltid lösbart
+  function shuffle(steps = 80){
+    locked = true;
+    state = solved.slice();
+    moves = 0;
+    movesEl.textContent = '0';
+
+    let blankPos = state.indexOf(0);
+    for (let i=0;i<steps;i++){
+      const n = neighbors(blankPos);
+      const pick = n[Math.floor(Math.random()*n.length)];
+      // flytta tile in i blank
+      [state[pick], state[blankPos]] = [state[blankPos], state[pick]];
+      blankPos = pick;
+    }
+    // undvik att råka landa löst
+    if (isSolved()) shuffle(steps+10);
+
+    locked = false;
+    render();
+  }
+
+  shuffleBtn.addEventListener('click', () => shuffle(90));
+  resetBtn.addEventListener('click', () => {
+    state = solved.slice();
+    moves = 0;
+    movesEl.textContent = '0';
+    render();
+  });
+
+  imgUrlInput.addEventListener('change', () => {
+    setImage(imgUrlInput.value.trim());
+    render();
+  });
+
+  // init
+  setImage(imgUrlInput.value.trim());
+  shuffle(90);
+})();
+</script>
+</body>
+</html>
