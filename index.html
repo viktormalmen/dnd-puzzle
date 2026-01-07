@@ -162,24 +162,17 @@
 <body>
   <div class="wrap">
     <div class="header">
-      <h1>3×3 Slide-pussel</h1>
+      <h1>Stora stendörren under Weyron Hall</h1>
       <div class="meta">
         <span>Drag: <b id="moves">0</b></span>
         <button id="shuffleBtn">Blanda</button>
-        <button class="secondary" id="resetBtn">Återställ</button>
+        <button class="secondary" id="resetBtn">Lösning</button>
       </div>
     </div>
 
     <div class="board" id="board" aria-label="Slide puzzle"></div>
 
-    <div class="toast" id="toast">✅ Klar! (bilden pulserar)</div>
-
-    <div class="footer">
-      <div class="hint">
-        Tryck på en bricka bredvid tomrutan för att flytta den.
-      </div>
-      <div class="small">Tips: om bilden inte laddar, byt till en egen bild-URL.</div>
-    </div>
+    <div class="toast" id="toast">Symbolen är vad följare av Shar använder</div>
 
     <div>
       <input id="imgUrl" type="text" spellcheck="false"
@@ -297,11 +290,7 @@
   }
 
   shuffleBtn.addEventListener('click', () => shuffle(90));
-  resetBtn.addEventListener('click', () => {
-    state = solved.slice();
-    moves = 0;
-    movesEl.textContent = '0';
-    render();
+
   });
 
   imgUrlInput.addEventListener('change', () => {
@@ -313,6 +302,21 @@
   setImage(imgUrlInput.value.trim());
   shuffle(90);
 })();
+  const solutionBtn = document.getElementById('solutionBtn');
+
+solutionBtn.addEventListener('click', () => {
+  const code = prompt("Ange koden för att öppna stendörren:");
+  if (code === "1234") {
+    state = solved.slice();
+    moves = 0;
+    movesEl.textContent = '0';
+    render();
+    alert("Stendörrens mekanism klickar till…");
+  } else if (code !== null) {
+    alert("Fel kod. Stendörren förblir stängd.");
+  }
+});
+
 </script>
 </body>
 </html>
