@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Slide Puzzle 3×3</title>
+  <title>Stora stendörren under Weyron Hall</title>
   <style>
     :root{
       --gap: 10px;
@@ -107,13 +107,6 @@
       box-shadow:none;
     }
 
-    .hint{
-      font-size:13px;
-      opacity:.78;
-      text-align:center;
-      line-height:1.35;
-    }
-
     /* Pulserande “klart”-effekt */
     .board.solved{
       animation: pulse 1.6s ease-in-out infinite;
@@ -136,17 +129,7 @@
       outline: 1px solid rgba(120,255,200,.22);
     }
     .toast.show{ display:block; }
-    .footer{
-      display:flex;
-      gap:10px;
-      justify-content:space-between;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .small{
-      font-size:12px;
-      opacity:.65;
-    }
+
     input[type="text"]{
       width:100%;
       border-radius:12px;
@@ -159,14 +142,15 @@
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="header">
-      <h1>Stora stendörren under Weyron Hall</h1>
+      <h1>Wayron Hall pussel</h1>
       <div class="meta">
         <span>Drag: <b id="moves">0</b></span>
         <button id="shuffleBtn">Blanda</button>
-        <button class="secondary" id="resetBtn">Lösning</button>
+        <button class="secondary" id="solutionBtn">Lösning</button>
       </div>
     </div>
 
@@ -174,11 +158,6 @@
 
     <div class="toast" id="toast">Symbolen är vad följare av Shar använder</div>
 
-    <div>
-      <input id="imgUrl" type="text" spellcheck="false"
-        value="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcon_mDpHDnYwCTnJkKvfwv_4bMocY1wH08w&s"
-        aria-label="Bild-URL" />
-    </div>
   </div>
 
 <script>
@@ -193,11 +172,10 @@
   const movesEl = document.getElementById('moves');
   const toast = document.getElementById('toast');
   const shuffleBtn = document.getElementById('shuffleBtn');
-  const resetBtn = document.getElementById('resetBtn');
+  const solutionBtn = document.getElementById('solutionBtn');
   const imgUrlInput = document.getElementById('imgUrl');
 
   function setImage(url){
-    // CSS-var på board, så tiles kan ärva
     board.style.setProperty('--img', `url("${url}")`);
   }
 
@@ -216,10 +194,18 @@
     return n;
   }
 
+  function isSolved(){
+    for (let i=0;i<state.length;i++){
+      if (state[i] !== solved[i]) return false;
+    }
+    return true;
+  }
+
   function render(){
     board.innerHTML = '';
-    board.classList.toggle('solved', isSolved());
-    toast.classList.toggle('show', isSolved());
+    const solvedNow = isSolved();
+    board.classList.toggle('solved', solvedNow);
+    toast.classList.toggle('show', solvedNow);
 
     for (let pos = 0; pos < state.length; pos++){
       const tileNum = state[pos]; // 0 blank
@@ -229,9 +215,6 @@
       el.setAttribute('aria-label', tileNum === 0 ? 'Tom ruta' : `Bricka ${tileNum}`);
 
       if (tileNum !== 0){
-        // tileNum 1..8 motsvarar position i målbilden: tileNum
-        // i vår solved-array ligger tileNum på samma index som tileNum i solved,
-        // så bakgrundspositionen styrs av tileNum:s "rätt" plats (tileNum->r,c).
         const {r, c} = idxToRC(tileNum);
         el.style.backgroundPosition = `${(c/(size-1))*100}% ${(r/(size-1))*100}%`;
         el.addEventListener('click', () => tryMove(pos));
@@ -242,24 +225,15 @@
     }
   }
 
-  function isSolved(){
-    for (let i=0;i<state.length;i++){
-      if (state[i] !== solved[i]) return false;
-    }
-    return true;
-  }
-
   function tryMove(fromPos){
     if (locked) return;
     const blankPos = state.indexOf(0);
     if (!neighbors(fromPos).includes(blankPos)) return;
 
-    // byt plats
     [state[fromPos], state[blankPos]] = [state[blankPos], state[fromPos]];
     moves++;
-    movesEl.textContent = moves.toString();
+    movesEl.textContent = String(moves);
 
-    // Om löst: lås kort för att undvika “extra klick” medan pulsen syns
     if (isSolved()){
       locked = true;
       setTimeout(()=>locked=false, 300);
@@ -267,8 +241,8 @@
     render();
   }
 
-  // “Säker” shuffle: gör slumpmässiga giltiga moves från löst läge => alltid lösbart
-  function shuffle(steps = 80){
+  // Shuffle via giltiga moves => alltid lösbart
+  function shuffle(steps = 90){
     locked = true;
     state = solved.slice();
     moves = 0;
@@ -278,12 +252,10 @@
     for (let i=0;i<steps;i++){
       const n = neighbors(blankPos);
       const pick = n[Math.floor(Math.random()*n.length)];
-      // flytta tile in i blank
       [state[pick], state[blankPos]] = [state[blankPos], state[pick]];
       blankPos = pick;
     }
-    // undvik att råka landa löst
-    if (isSolved()) shuffle(steps+10);
+    if (isSolved()) return shuffle(steps+10);
 
     locked = false;
     render();
@@ -291,6 +263,17 @@
 
   shuffleBtn.addEventListener('click', () => shuffle(90));
 
+  solutionBtn.addEventListener('click', () => {
+    const code = prompt("Ange koden för att öppna stendörren:");
+    if (code === "1234") {
+      state = solved.slice();
+      moves = 0;
+      movesEl.textContent = '0';
+      render();
+      alert("Stendörrens mekanism klickar till…");
+    } else if (code !== null) {
+      alert("Fel kod. Stendörren förblir stängd.");
+    }
   });
 
   imgUrlInput.addEventListener('change', () => {
@@ -302,21 +285,6 @@
   setImage(imgUrlInput.value.trim());
   shuffle(90);
 })();
-  const solutionBtn = document.getElementById('solutionBtn');
-
-solutionBtn.addEventListener('click', () => {
-  const code = prompt("Ange koden för att öppna stendörren:");
-  if (code === "1234") {
-    state = solved.slice();
-    moves = 0;
-    movesEl.textContent = '0';
-    render();
-    alert("Stendörrens mekanism klickar till…");
-  } else if (code !== null) {
-    alert("Fel kod. Stendörren förblir stängd.");
-  }
-});
-
 </script>
 </body>
 </html>
