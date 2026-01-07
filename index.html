@@ -1,284 +1,235 @@
 <!doctype html>
 <html lang="sv">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Stora stendörren under Weyron Hall</title>
-  <style>
-    :root{
-      --gap: 10px;
-      --radius: 16px;
-      --shadow: 0 12px 30px rgba(0,0,0,.25);
-    }
-    body{
-      margin:0;
-      min-height:100svh;
-      display:grid;
-      place-items:center;
-      background: radial-gradient(1200px 800px at 50% 30%, #232837, #0d0f14 70%);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:#eef2ff;
-      padding: 20px;
-    }
-    .wrap{
-      width:min(92vw, 520px);
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      align-items:stretch;
-    }
-    .header{
-      display:flex;
-      justify-content:space-between;
-      align-items:baseline;
-      gap:12px;
-    }
-    h1{
-      font-size:18px;
-      margin:0;
-      letter-spacing:.2px;
-      opacity:.92;
-    }
-    .meta{
-      font-size:13px;
-      opacity:.8;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    button{
-      appearance:none;
-      border:0;
-      background:#2a2f40;
-      color:#eef2ff;
-      border-radius:12px;
-      padding:10px 12px;
-      font-weight:600;
-      cursor:pointer;
-      box-shadow: 0 6px 18px rgba(0,0,0,.25);
-    }
-    button:active{ transform: translateY(1px); }
-    button.secondary{
-      background: transparent;
-      outline: 1px solid rgba(255,255,255,.18);
-      box-shadow:none;
-      font-weight:600;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tjuvens Kassaskåp</title>
 
-    .board{
-      aspect-ratio: 1 / 1;
-      width:100%;
-      background: rgba(255,255,255,.06);
-      border-radius: calc(var(--radius) + 6px);
-      box-shadow: var(--shadow);
-      padding: var(--gap);
-      display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: var(--gap);
-      position:relative;
-      overflow:hidden;
-      user-select:none;
-      touch-action: manipulation;
-    }
+<style>
+  body{
+    margin:0;
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    background:radial-gradient(900px 600px at 50% 30%, #22283a, #0b0d12 70%);
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color:#eaeaff;
+  }
 
-    .tile{
-      border-radius: var(--radius);
-      background-color: rgba(0,0,0,.25);
-      background-image: var(--img);
-      background-repeat:no-repeat;
-      background-size: 300% 300%;
-      box-shadow: 0 10px 22px rgba(0,0,0,.22);
-      position:relative;
-      cursor:pointer;
-      transition: transform 120ms ease, filter 200ms ease, box-shadow 200ms ease;
-      outline: 1px solid rgba(255,255,255,.10);
-    }
-    .tile:hover{ filter: brightness(1.05); }
-    .tile:active{ transform: scale(.99); }
+  .wrap{
+    width:min(92vw, 380px);
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    align-items:stretch;
+  }
 
-    .tile.blank{
-      background: rgba(0,0,0,.12);
-      background-image:none;
-      outline: 1px dashed rgba(255,255,255,.18);
-      cursor:default;
-      box-shadow:none;
-    }
+  .lock{
+    width:100%;
+    aspect-ratio:1/1;
+    border-radius:50%;
+    background:#1c1f2b;
+    position:relative;
+    box-shadow:0 0 40px rgba(0,0,0,.6);
+    overflow:hidden;
+  }
 
-    /* Pulserande “klart”-effekt */
-    .board.solved{
-      animation: pulse 1.6s ease-in-out infinite;
-      outline: 2px solid rgba(180, 255, 220, .35);
-    }
-    @keyframes pulse{
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(120,255,200,0)); }
-      50%      { transform: scale(1.01); filter: drop-shadow(0 0 14px rgba(120,255,200,.25)); }
-    }
+  /* “Antikt lås”-bakgrund */
+  .lock::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image: var(--img);
+    background-size: cover;
+    background-position:center;
+    filter: contrast(1.05) brightness(.9);
+    opacity:.35;
+  }
 
-    .toast{
-      text-align:center;
-      font-weight:700;
-      letter-spacing:.2px;
-      opacity:.92;
-      display:none;
-      padding:10px 12px;
-      border-radius: 14px;
-      background: rgba(120,255,200,.12);
-      outline: 1px solid rgba(120,255,200,.22);
-    }
-    .toast.show{ display:block; }
+  .tile{
+    width:74px;
+    height:74px;
+    border-radius:50%;
+    position:absolute;
+    display:grid;
+    place-items:center;
+    font-weight:800;
+    cursor:pointer;
+    user-select:none;
+    transition: transform .12s ease, filter .2s ease, opacity .2s ease;
+    outline: 1px solid rgba(255,255,255,.14);
+    background: rgba(20,22,30,.65);
+    backdrop-filter: blur(2px);
+    z-index: 1;
+  }
+  .tile:hover{ transform: scale(1.03); filter:brightness(1.08); }
+  .tile:active{ transform: scale(.98); }
 
-    input[type="text"]{
-      width:100%;
-      border-radius:12px;
-      border:0;
-      outline: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.25);
-      color:#eef2ff;
-      padding:10px 12px;
-      font-size:13px;
-    }
-  </style>
+  .tile.locked{
+    opacity:.35;
+    filter: grayscale(1) brightness(.65);
+    cursor:not-allowed;
+  }
+
+  .tile.wrongflash{
+    animation: wrong .25s ease-in-out 2;
+  }
+  @keyframes wrong{
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(1.04); }
+  }
+
+  .center{
+    position:absolute;
+    inset: 38%;
+    border-radius:50%;
+    background: rgba(255,255,255,.06);
+    outline: 1px solid rgba(255,255,255,.14);
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+    z-index: 2;
+    font-weight:700;
+  }
+
+  .message{
+    text-align:center;
+    min-height:1.2em;
+    opacity:.92;
+  }
+
+  .solved{
+    animation:pulse 1.5s ease-in-out infinite;
+    box-shadow:0 0 50px rgba(120,255,200,.35);
+  }
+  @keyframes pulse{
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(1.01); }
+  }
+</style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="header">
-      <h1>Wayron Hall pussel</h1>
-      <div class="meta">
-        <span>Drag: <b id="moves">0</b></span>
-        <button id="shuffleBtn">Blanda</button>
-        <button class="secondary" id="solutionBtn">Lösning</button>
-      </div>
-    </div>
 
-    <div class="board" id="board" aria-label="Slide puzzle"></div>
-
-    <div class="toast" id="toast">Symbolen är vad följare av Shar använder</div>
-
-  </div>
+<div class="wrap">
+  <div class="lock" id="lock" aria-label="Kassaskåpslås"></div>
+  <div class="message" id="msg"></div>
+</div>
 
 <script>
 (() => {
-  const size = 3;
+  // ✅ Byt gärna till en lokal bild i ditt repo (t.ex. "./lock.jpg") för säker laddning
   const IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcon_mDpHDnYwCTnJkKvfwv_4bMocY1wH08w&s";
 
-  const solved = Array.from({length: size*size}, (_,i)=>i); // 0..8, 0 = blank
-  let state = solved.slice();
-  let moves = 0;
-  let locked = false;
+  // ✅ Rätt ordning:
+  const SOLUTION = ["A","C","E","D","F","B"];
 
-  const board = document.getElementById('board');
-  const movesEl = document.getElementById('moves');
-  const toast = document.getElementById('toast');
-  const shuffleBtn = document.getElementById('shuffleBtn');
-  const solutionBtn = document.getElementById('solutionBtn');
+  // ✅ Här byter du symbolerna som syns på varje knapp:
+  // Du kan använda text (✦), emoji (🗝️), runor (ᚠ), eller korta ord.
+  const SYMBOLS = {
+    A: "🜁",  // byt till valfri symbol
+    B: "🜃",
+    C: "🜂",
+    D: "🜄",
+    E: "✶",
+    F: "☾"
+  };
 
-  function setImage(url){
-    board.style.setProperty('--img', `url("${url}")`);
+  // Positioner runt “låset”
+  const POS = {
+    A:[41, 10],
+    B:[68, 26],
+    C:[68, 58],
+    D:[41, 74],
+    E:[14, 58],
+    F:[14, 26]
+  };
+
+  const lock = document.getElementById("lock");
+  const msg  = document.getElementById("msg");
+
+  let progress = 0;
+  let solved = false;
+
+  function setMessage(t){ msg.textContent = t; }
+
+  function reset(){
+    progress = 0;
+    solved = false;
+    lock.classList.remove("solved");
+    setMessage("Låset väntar…");
+    render();
   }
 
-  function idxToRC(idx){
-    return { r: Math.floor(idx / size), c: idx % size };
-  }
-  function rcToIdx(r,c){ return r*size + c; }
+  function clickSymbol(letter){
+    if (solved) return;
 
-  function neighbors(idx){
-    const {r,c} = idxToRC(idx);
-    const n = [];
-    if (r>0) n.push(rcToIdx(r-1,c));
-    if (r<size-1) n.push(rcToIdx(r+1,c));
-    if (c>0) n.push(rcToIdx(r,c-1));
-    if (c<size-1) n.push(rcToIdx(r,c+1));
-    return n;
-  }
+    const expected = SOLUTION[progress];
+    if (letter === expected) {
+      progress++;
+      setMessage(`✓ ${letter}…`);
 
-  function isSolved(){
-    for (let i=0;i<state.length;i++){
-      if (state[i] !== solved[i]) return false;
+      // lås knappen visuellt
+      const el = document.querySelector(`[data-letter="${letter}"]`);
+      if (el) el.classList.add("locked");
+
+      if (progress === SOLUTION.length) {
+        solved = true;
+        lock.classList.add("solved");
+        setMessage("🔓 Kassaskåpet öppnas ljudlöst.");
+      }
+      return;
     }
-    return true;
+
+    // Fel: liten feedback och reset av sekvensen (kan ändras om du vill)
+    setMessage("✗ Fel… fjädern spänner om.");
+    flashWrong(letter);
+    // Reset efter kort delay
+    setTimeout(() => {
+      progress = 0;
+      // lås upp alla knappar visuellt
+      document.querySelectorAll(".tile").forEach(t => t.classList.remove("locked"));
+      setMessage("Låset väntar…");
+    }, 450);
+  }
+
+  function flashWrong(letter){
+    const el = document.querySelector(`[data-letter="${letter}"]`);
+    if (!el) return;
+    el.classList.add("wrongflash");
+    setTimeout(() => el.classList.remove("wrongflash"), 600);
   }
 
   function render(){
-    board.innerHTML = '';
-    const solvedNow = isSolved();
-    board.classList.toggle('solved', solvedNow);
-    toast.classList.toggle('show', solvedNow);
+    lock.innerHTML = "";
+    lock.style.setProperty("--img", `url("${IMAGE_URL}")`);
 
-    for (let pos = 0; pos < state.length; pos++){
-      const tileNum = state[pos]; // 0 blank
-      const el = document.createElement('div');
-      el.className = 'tile' + (tileNum === 0 ? ' blank' : '');
-      el.setAttribute('role','button');
-      el.setAttribute('aria-label', tileNum === 0 ? 'Tom ruta' : `Bricka ${tileNum}`);
+    // Skapa knappar
+    for (const [letter, [xPct,yPct]] of Object.entries(POS)){
+      const btn = document.createElement("div");
+      btn.className = "tile";
+      btn.dataset.letter = letter;
+      btn.style.left = `calc(${xPct}% - 37px)`;
+      btn.style.top  = `calc(${yPct}% - 37px)`;
+      btn.textContent = SYMBOLS[letter] ?? letter;
 
-      if (tileNum !== 0){
-        const {r, c} = idxToRC(tileNum);
-        el.style.backgroundPosition = `${(c/(size-1))*100}% ${(r/(size-1))*100}%`;
-        el.addEventListener('click', () => tryMove(pos));
-        el.addEventListener('touchend', (e) => { e.preventDefault(); tryMove(pos); }, {passive:false});
-      }
+      btn.addEventListener("click", () => clickSymbol(letter));
+      btn.addEventListener("touchend", (e) => { e.preventDefault(); clickSymbol(letter); }, {passive:false});
 
-      board.appendChild(el);
+      lock.appendChild(btn);
     }
+
+    // Reset i mitten
+    const center = document.createElement("div");
+    center.className = "center";
+    center.textContent = "Reset";
+    center.addEventListener("click", reset);
+    lock.appendChild(center);
   }
-
-  function tryMove(fromPos){
-    if (locked) return;
-    const blankPos = state.indexOf(0);
-    if (!neighbors(fromPos).includes(blankPos)) return;
-
-    [state[fromPos], state[blankPos]] = [state[blankPos], state[fromPos]];
-    moves++;
-    movesEl.textContent = String(moves);
-
-    if (isSolved()){
-      locked = true;
-      setTimeout(()=>locked=false, 300);
-    }
-    render();
-  }
-
-  function shuffle(steps = 90){
-    locked = true;
-    state = solved.slice();
-    moves = 0;
-    movesEl.textContent = '0';
-
-    let blankPos = state.indexOf(0);
-    for (let i=0;i<steps;i++){
-      const n = neighbors(blankPos);
-      const pick = n[Math.floor(Math.random()*n.length)];
-      [state[pick], state[blankPos]] = [state[blankPos], state[pick]];
-      blankPos = pick;
-    }
-    if (isSolved()) return shuffle(steps+10);
-
-    locked = false;
-    render();
-  }
-
-  shuffleBtn.addEventListener('click', () => shuffle(90));
-
-  solutionBtn.addEventListener('click', () => {
-    const code = prompt("Ange koden för att öppna stendörren:");
-    if (code === "1234") {
-      state = solved.slice();
-      moves = 0;
-      movesEl.textContent = '0';
-      render();
-      alert("Stendörrens mekanism klickar till…");
-    } else if (code !== null) {
-      alert("Fel kod. Stendörren förblir stängd.");
-    }
-  });
 
   // init
-  setImage(IMAGE_URL);
-  shuffle(90);
+  setMessage("Låset väntar…");
+  render();
 })();
 </script>
 
