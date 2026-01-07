@@ -163,6 +163,8 @@
 <script>
 (() => {
   const size = 3;
+  const IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcon_mDpHDnYwCTnJkKvfwv_4bMocY1wH08w&s";
+
   const solved = Array.from({length: size*size}, (_,i)=>i); // 0..8, 0 = blank
   let state = solved.slice();
   let moves = 0;
@@ -173,7 +175,6 @@
   const toast = document.getElementById('toast');
   const shuffleBtn = document.getElementById('shuffleBtn');
   const solutionBtn = document.getElementById('solutionBtn');
-  const imgUrlInput = document.getElementById('imgUrl');
 
   function setImage(url){
     board.style.setProperty('--img', `url("${url}")`);
@@ -241,7 +242,6 @@
     render();
   }
 
-  // Shuffle via giltiga moves => alltid lösbart
   function shuffle(steps = 90){
     locked = true;
     state = solved.slice();
@@ -276,15 +276,11 @@
     }
   });
 
-  imgUrlInput.addEventListener('change', () => {
-    setImage(imgUrlInput.value.trim());
-    render();
-  });
-
   // init
-  setImage(imgUrlInput.value.trim());
+  setImage(IMAGE_URL);
   shuffle(90);
 })();
 </script>
+
 </body>
 </html>
